@@ -1,7 +1,8 @@
 #[macro_use]
 extern crate diesel;
 
-use std::env; 
+use futures::future::join_all;
+use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -12,29 +13,19 @@ use diesel::sql_query;
 use ethers::providers::Middleware;
 use ethers::providers::Provider;
 use ethers::providers::Ws;
- use tokio::sync::futures;
 use tokio::task::JoinHandle;
- pub mod db;
+pub mod db;
 pub mod models;
 pub mod schema;
 use crate::db::insert_tx;
 use crate::models::Count;
-use ethers::{
-    providers::{ StreamExt },
-    types::H256,
-};
+use dotenv::dotenv;
+use ethers::providers::StreamExt;
 
 #[tokio::main]
 async fn main() {
-    let mut thread_handles: Vec<JoinHandle<()>> = vec![];
+    dotenv().ok();
     let conn = &mut db::establish_connection();
-    let node_ws = env::var("WSS_NODE").expect("WSS Node endpoint is missing");
-    let url = String::from(node_ws);
-    let ws = Ws::connect(url).await.unwrap();
-    let provider = Arc::new(Provider::new(ws).interval(Duration::from_millis(2000)));
-    let p1 = provider.clone();
-    let p2 = provider.clone();
-
     let result = insert_tx(conn);
     match result {
         Ok(r) => {
@@ -49,13 +40,21 @@ async fn main() {
         .unwrap();
 
     println!("{:?}", users);
-    // Ok(())
+
+    let mut thread_handles: Vec<JoinHandle<()>> = vec![];
+    let node_ws = env::var("ws_provider_eth").expect("WSS Node endpoint is missing");
+    let url = String::from(node_ws);
+    let ws = Ws::connect(url).await.unwrap();
+    let provider = Arc::new(Provider::new(ws).interval(Duration::from_millis(2000)));
+    let p1 = provider.clone();
+
     thread_handles.push(tokio::spawn(async move {
         let l1 = p1;
         let mut stream = l1.provider().subscribe_pending_txs().await.unwrap();
         while let Some(tx_hash) = stream.next().await {
-            println!("{}",tx_hash);
+            println!("{}", tx_hash);
         }
-    })); 
+    }));
 
+    let join_rs = join_all(thread_handles).await;
 }

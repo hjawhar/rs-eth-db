@@ -2538,6 +2538,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "ethers",
+ "futures",
  "serde",
  "serde_json",
  "tokio",
