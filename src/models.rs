@@ -6,15 +6,16 @@
 use crate::*;
 use diesel::sql_types::BigInt;
 use diesel::{self, prelude::*};
-use schema::cars;
+use ethers::types::{U256, U64};
+use schema::blocks;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
-#[table_name = "cars"]
-pub struct Car {
-    pub id: i32,
-    pub name: String,
-    pub model: String,
+#[table_name = "blocks"]
+pub struct DBBlock {
+    pub number: U64,
+    pub timestamp: U256,
+    pub hash: Option<String>,
 }
 
 #[derive(QueryableByName,Debug)]

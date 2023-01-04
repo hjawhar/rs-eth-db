@@ -1,9 +1,10 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    cars (id) {
+    blocks (id) {
         id -> Int4,
-        name -> Varchar,
-        model -> Varchar,
+        number -> Nullable<Int8>,
+        timestamp -> Nullable<Int8>,
+        hash -> Nullable<Varchar>,
     }
 }
