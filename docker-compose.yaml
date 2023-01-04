@@ -1,0 +1,26 @@
+version: "2"
+services:
+  web:
+    image: "rust:1.62.1"
+    # user: "ukf"
+    working_dir: /home/node/app
+    environment:
+      - user=UKF
+    volumes:
+      - ./:/home/node/app
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    command: "cargo run"
+
+  db:
+    image: postgres
+    # restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
