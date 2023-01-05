@@ -29,24 +29,33 @@ async fn main() {
     let ws = Ws::connect(url).await.unwrap();
     let provider = Arc::new(Provider::new(ws).interval(Duration::from_millis(2000)));
     let p1 = provider.clone();
+    let p2 = provider.clone();
     let db1 = db.clone();
+    let db2 = db.clone();
 
-    let last_block = db1.get_last_block().await;
+    let last_synced_block = db1.get_last_block().await;
+    let mut last_synced_block_res = 1_u64;
     let blocks_count = db1.get_last_block_count().await;
-    if let Some(last_block_res) = last_block {
+    if let Some(last_block_res) = last_synced_block {
         println!("Last fetched block: {}", last_block_res.number);
+        last_synced_block_res = last_block_res.number.to_string().parse::<u64>().unwrap();
     }
     println!("Blocks fetched: {}", blocks_count);
-
+    let current_block = (p1.provider().get_block_number().await).unwrap().as_u64();
     thread_handles.push(tokio::spawn(async move {
         let l1 = p1;
         let mut stream = l1.provider().subscribe_blocks().await.unwrap();
         while let Some(block) = stream.next().await {
-            if let Some(block_number) = block.number {
-                if let Ok(block_res) = provider.get_block_with_txs(block_number).await {
-                    if let Some(block_with_txs) = block_res {
-                        db1.insert_block(&block_with_txs).await;
-                    }
+            println!("Current block number: {}", block.number.unwrap());
+        }
+    }));
+
+    thread_handles.push(tokio::spawn(async move {
+        let l2 = p2;
+        for n in last_synced_block_res..current_block {
+            if let Ok(block_res) = l2.get_block_with_txs(n).await {
+                if let Some(block_with_txs) = block_res {
+                    db2.insert_block(&block_with_txs).await;
                 }
             }
         }
