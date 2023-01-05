@@ -19,6 +19,12 @@ pub struct Block {
     pub hash: String,
 }
 
+#[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
+#[diesel(table_name = blocks)]
+pub struct BlockNumber {
+    pub number: i64 
+}
+
 #[derive(QueryableByName, Debug)]
 pub struct Count {
     #[diesel(sql_type = BigInt)]

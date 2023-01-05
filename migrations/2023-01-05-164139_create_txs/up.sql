@@ -1,4 +1,5 @@
 -- Your SQL goes here
+DROP TABLE IF EXISTS transactions; 
 CREATE TABLE transactions( 
   hash VARCHAR PRIMARY KEY,
   value BigInt NOT NULL,
