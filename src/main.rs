@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate diesel;
 
 use futures::future::join_all;
@@ -32,16 +31,26 @@ async fn main() {
     let p1 = provider.clone();
     let db1 = db.clone();
 
-    // THIS IS FOR TESTING
-    db1.simple_query().await;
+    let last_block = db1.get_last_block().await;
+    let blocks_count = db1.get_last_block_count().await;
+    if let Some(last_block_res) = last_block {
+        println!("Last fetched block: {}", last_block_res.number);
+    }
+    println!("Blocks fetched: {}", blocks_count);
 
     thread_handles.push(tokio::spawn(async move {
         let l1 = p1;
         let mut stream = l1.provider().subscribe_blocks().await.unwrap();
         while let Some(block) = stream.next().await {
-            db1.insert_block(&block);
+            if let Some(block_number) = block.number {
+                if let Ok(block_res) = provider.get_block_with_txs(block_number).await {
+                    if let Some(block_with_txs) = block_res {
+                        db1.insert_block(&block_with_txs).await;
+                    }
+                }
+            }
         }
     }));
 
-    let join_rs = join_all(thread_handles).await;
+    let _join_rs = join_all(thread_handles).await;
 }
