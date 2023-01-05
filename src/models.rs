@@ -3,6 +3,7 @@
 #![allow(unused)]
 #![allow(clippy::all)]
 
+use crate::schema::transactions;
 use crate::*;
 use diesel::sql_types::BigInt;
 use diesel::{self, prelude::*};
@@ -22,4 +23,15 @@ pub struct Block {
 pub struct Count {
     #[diesel(sql_type = BigInt)]
     count: i64,
+}
+
+#[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
+#[diesel(table_name = transactions)]
+pub struct Transaction {
+    pub hash: String,
+    pub value: i64,
+    pub position: i16,
+    pub sender: String,
+    pub receiver: Option<String>,
+    pub input: Option<String>,
 }
