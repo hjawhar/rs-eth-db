@@ -11,15 +11,15 @@ use schema::blocks;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
-#[table_name = "blocks"]
-pub struct DBBlock {
-    pub number: U64,
-    pub timestamp: U256,
-    pub hash: Option<String>,
+#[diesel(table_name = blocks)]
+pub struct Block {
+    pub number: i64,
+    pub timestamp: i64,
+    pub hash: String,
 }
 
-#[derive(QueryableByName,Debug)]
+#[derive(QueryableByName, Debug)]
 pub struct Count {
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     count: i64,
 }
