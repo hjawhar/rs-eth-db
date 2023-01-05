@@ -1,9 +1,10 @@
 use crate::*;
+use bigdecimal::BigDecimal;
 use diesel::{connection::Connection, PgConnection};
 use dotenv::dotenv;
-use ethers::types::{Block, Transaction};
+use ethers::types::{Block, Transaction, H160};
 use futures::lock::Mutex;
-use std::env;
+use std::{env, str::FromStr};
 pub struct Database {
     pub connection: Arc<Mutex<PgConnection>>,
 }
@@ -82,7 +83,44 @@ impl Database {
         }
 
         for tx in block.transactions.iter() {
-            println!("{}", tx.hash);
+            self.insert_tx(tx, conn).await;
+        }
+    }
+
+    async fn insert_tx(&self, tx: &Transaction, conn: &mut PgConnection) {
+        use crate::schema::transactions::dsl::*;
+        use diesel::insert_into;
+        println!("{:#?}", tx.value);
+        let tx_value = BigDecimal::from_str(&tx.value.to_string())
+            .unwrap()
+            .as_bigint_and_exponent();
+        let transaction_value = (
+            hash.eq(tx.hash.to_string()),
+            value.eq(tx_value.1),
+            position.eq(tx
+                .transaction_index
+                .unwrap()
+                .to_string()
+                .parse::<i32>()
+                .unwrap()),
+            sender.eq(tx.from.to_string()),
+            receiver.eq(tx
+                .to
+                .unwrap_or(H160::from_str("0x0000000000000000000000000000000000000000").unwrap())
+                .to_string()),
+            input.eq(tx.input.to_string()),
+        );
+
+        let result = insert_into(transactions)
+            .values(transaction_value)
+            .execute(conn);
+        match result {
+            Ok(_) => {
+                // println!("Successfully added transaction {}", tx.hash);
+            }
+            Err(err) => {
+                println!("Error adding transaction {} {}", err, tx.hash);
+            }
         }
     }
 }
