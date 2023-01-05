@@ -55,14 +55,18 @@ impl Database {
         blocks
     }
 
+    pub async fn get_blocks_numbers(&self) -> Vec<models::BlockNumber> {
+        let conn = &mut *(self.connection.lock().await);
+        let blocks = sql_query("SELECT number from blocks")
+            .load::<models::BlockNumber>(conn)
+            .unwrap();
+
+        blocks
+    }
+
     pub async fn insert_block(&self, block: &Block<Transaction>) {
         use crate::schema::blocks::dsl::*;
         use diesel::insert_into;
-        println!(
-            "Block number: {} - Total transactions: {}",
-            block.number.unwrap(),
-            block.transactions.len()
-        );
         let conn = &mut *(self.connection.lock().await);
         let block_number = block.number.unwrap().to_string().parse::<i64>().unwrap();
         let block_hash = block.hash.unwrap().to_string();
@@ -74,9 +78,7 @@ impl Database {
         );
         let result = insert_into(blocks).values(block_value).execute(conn);
         match result {
-            Ok(_) => {
-                println!("Successfully added block {}", block.number.unwrap());
-            }
+            Ok(_) => {}
             Err(err) => {
                 println!("Error adding block {} {}", err, block.number.unwrap());
             }
@@ -85,12 +87,16 @@ impl Database {
         for tx in block.transactions.iter() {
             self.insert_tx(tx, conn).await;
         }
+        println!(
+            "Successfully added block: {} - total transactions: {} ",
+            block.number.unwrap(),
+            block.transactions.len()
+        );
     }
 
     async fn insert_tx(&self, tx: &Transaction, conn: &mut PgConnection) {
         use crate::schema::transactions::dsl::*;
         use diesel::insert_into;
-        println!("{:#?}", tx.value);
         let tx_value = BigDecimal::from_str(&tx.value.to_string())
             .unwrap()
             .as_bigint_and_exponent();
