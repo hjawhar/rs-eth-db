@@ -1,5 +1,4 @@
 -- Your SQL goes here
-DROP TABLE IF EXISTS transactions; 
 CREATE TABLE transactions( 
   hash VARCHAR NOT NULL,
   value numeric NOT NULL,
@@ -9,4 +8,8 @@ CREATE TABLE transactions(
   input VARCHAR NOT NULL,
   block_number BigInt NOT NULL,
   PRIMARY KEY(hash, block_number)
-)
+);
+
+create index sender_index on transactions(sender);
+create index receiver_index on transactions(receiver);
+create index hash_index on transactions(hash);
