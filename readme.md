@@ -14,6 +14,7 @@ The app will populate/seed your database with blocks & transactions, if you stop
 
 ## Run
 ```
+diesel run migration
 cargo run
 ```
 
