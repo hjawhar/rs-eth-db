@@ -55,12 +55,12 @@ impl Database {
         blocks
     }
 
-    // pub async fn get_transactions(&self) -> Vec<models::DbTransaction> {
-    //     let conn = &mut *(self.connection.lock().await);
-    //     use crate::schema::transactions::dsl::*;
-    //     let txs = transactions.load::<models::DbTransaction>(conn).unwrap();
-    //     txs
-    // }
+    pub async fn get_transactions(&self) -> Vec<models::Transaction> {
+        let conn = &mut *(self.connection.lock().await);
+        use crate::schema::transactions::dsl::*;
+        let txs = transactions.load::<models::Transaction>(conn).unwrap();
+        txs
+    }
 
     pub async fn get_blocks_numbers(&self) -> Vec<models::BlockNumber> {
         let conn = &mut *(self.connection.lock().await);

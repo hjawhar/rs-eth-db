@@ -5,6 +5,7 @@
 
 use crate::schema::transactions;
 use crate::*;
+use bigdecimal::BigDecimal;
 use diesel::sql_types::BigInt;
 use diesel::{self, prelude::*};
 use ethers::types::{U256, U64};
@@ -33,14 +34,14 @@ pub struct Count {
     count: i64,
 }
 
-#[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
+#[derive(Queryable, QueryableByName, Debug)]
 #[diesel(table_name = transactions)]
 pub struct Transaction {
     pub hash: String,
-    pub value: i128,
-    pub position: i16,
+    pub value: BigDecimal,
+    pub position: i32,
     pub sender: String,
     pub receiver: String,
     pub input: String,
-    pub block_number: i64
+    pub block_number: i64,
 }
