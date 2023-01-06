@@ -12,9 +12,9 @@ The purpose of this project is to be able to sync a full node, populate/seed the
 ## Application
 The app will populate/seed your database with blocks & transactions, if you stop the app, it will start from the last synced block.
 
-## Run
+## Instructions
 ```
-diesel run migration
+diesel migration run
 cargo run
 ```
 
