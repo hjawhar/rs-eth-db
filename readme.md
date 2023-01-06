@@ -16,3 +16,8 @@ The app will populate/seed your database with blocks & transactions, if you stop
 ```
 cargo run
 ```
+
+
+## Screenshots
+![Screenshot](https://i.imgur.com/3OVM3EE.png)
+
