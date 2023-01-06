@@ -55,6 +55,13 @@ impl Database {
         blocks
     }
 
+    // pub async fn get_transactions(&self) -> Vec<models::DbTransaction> {
+    //     let conn = &mut *(self.connection.lock().await);
+    //     use crate::schema::transactions::dsl::*;
+    //     let txs = transactions.load::<models::DbTransaction>(conn).unwrap();
+    //     txs
+    // }
+
     pub async fn get_blocks_numbers(&self) -> Vec<models::BlockNumber> {
         let conn = &mut *(self.connection.lock().await);
         let blocks = sql_query("SELECT number from blocks")
@@ -69,7 +76,7 @@ impl Database {
         use diesel::insert_into;
         let conn = &mut *(self.connection.lock().await);
         let block_number = block.number.unwrap().to_string().parse::<i64>().unwrap();
-        let block_hash = block.hash.unwrap().to_string();
+        let block_hash = format!("{:?}", block.hash.unwrap());
         let block_timestamp = block.timestamp.to_string().parse::<i64>().unwrap();
         let block_value = (
             number.eq(block_number),
@@ -95,37 +102,48 @@ impl Database {
     }
 
     async fn insert_tx(&self, tx: &Transaction, conn: &mut PgConnection) {
+        let tx_block_number = tx.block_number.unwrap().to_string().parse::<i64>().unwrap();
+        let tx_hash = format!("{:#x}", tx.hash);
+        let tx_sender = format!("{:#x}", tx.from);
+        let tx_receiver: String;
+        if let Some(_receiver) = tx.to {
+            tx_receiver = format!("{:#x}", _receiver);
+        } else {
+            tx_receiver = format!(
+                "{:#x}",
+                H160::from_str("0x0000000000000000000000000000000000000000").unwrap()
+            );
+        }
+
         use crate::schema::transactions::dsl::*;
         use diesel::insert_into;
-        let tx_value = BigDecimal::from_str(&tx.value.to_string())
-            .unwrap()
-            .as_bigint_and_exponent();
+        let tx_value = BigDecimal::from_str(&tx.value.to_string()).unwrap();
         let transaction_value = (
-            hash.eq(tx.hash.to_string()),
-            value.eq(tx_value.1),
+            hash.eq(tx_hash),
+            value.eq(tx_value),
             position.eq(tx
                 .transaction_index
                 .unwrap()
                 .to_string()
                 .parse::<i32>()
                 .unwrap()),
-            sender.eq(tx.from.to_string()),
-            receiver.eq(tx
-                .to
-                .unwrap_or(H160::from_str("0x0000000000000000000000000000000000000000").unwrap())
-                .to_string()),
+            sender.eq(tx_sender),
+            receiver.eq(tx_receiver),
             input.eq(tx.input.to_string()),
+            block_number.eq(tx_block_number),
         );
-
         let result = insert_into(transactions)
             .values(transaction_value)
             .execute(conn);
         match result {
-            Ok(_) => {
-                // println!("Successfully added transaction {}", tx.hash);
-            }
+            Ok(_) => {}
             Err(err) => {
-                println!("Error adding transaction {} {}", err, tx.hash);
+                println!(
+                    "Error adding transaction {} {} {}",
+                    err,
+                    tx.hash,
+                    tx.block_number.unwrap()
+                );
             }
         }
     }

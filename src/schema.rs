@@ -9,13 +9,14 @@ diesel::table! {
 }
 
 diesel::table! {
-    transactions (hash) {
+    transactions (hash, block_number) {
         hash -> Varchar,
-        value -> Int8,
+        value -> Numeric,
         position -> Int4,
         sender -> Varchar,
-        receiver -> Nullable<Varchar>,
-        input -> Nullable<Varchar>,
+        receiver -> Varchar,
+        input -> Varchar,
+        block_number -> Int8,
     }
 }
 

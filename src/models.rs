@@ -22,7 +22,9 @@ pub struct Block {
 #[derive(Deserialize, Serialize, Queryable, QueryableByName, Debug)]
 #[diesel(table_name = blocks)]
 pub struct BlockNumber {
-    pub number: i64 
+    pub number: i64,
+    pub timestamp: i64,
+    pub hash: String,
 }
 
 #[derive(QueryableByName, Debug)]
@@ -35,9 +37,10 @@ pub struct Count {
 #[diesel(table_name = transactions)]
 pub struct Transaction {
     pub hash: String,
-    pub value: i64,
+    pub value: i128,
     pub position: i16,
     pub sender: String,
-    pub receiver: Option<String>,
-    pub input: Option<String>,
+    pub receiver: String,
+    pub input: String,
+    pub block_number: i64
 }
